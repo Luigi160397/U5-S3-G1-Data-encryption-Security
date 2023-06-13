@@ -11,19 +11,30 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import jakarta.persistence.AttributeConverter;
 
 public class CodiceEdificioConverter implements AttributeConverter<String, String> {
 
-	private final static String ALGORITHM = "AES/ECB/PKCS5Padding";
+	private static String ALGORITMO;
+	private static String SEGRETO;
 
-	private final static String secret = "mZq3t6w9zxCxFxgh";
+	@Value("${spring.application.segreto}")
+	public void setSEGRETO(String segreto) {
+		SEGRETO = segreto;
+	}
+
+	@Value("${spring.application.algoritmo}")
+	public void setALGORITMO(String algoritmo) {
+		ALGORITMO = algoritmo;
+	}
 
 	@Override
 	public String convertToDatabaseColumn(String codice) {
 		try {
-			Key key = new SecretKeySpec(secret.getBytes(), "AES");
-			Cipher c = Cipher.getInstance(ALGORITHM);
+			Key key = new SecretKeySpec(SEGRETO.getBytes(), "AES");
+			Cipher c = Cipher.getInstance(ALGORITMO);
 
 			c.init(Cipher.ENCRYPT_MODE, key);
 
@@ -38,9 +49,9 @@ public class CodiceEdificioConverter implements AttributeConverter<String, Strin
 
 	@Override
 	public String convertToEntityAttribute(String dbCodice) {
-		Key key = new SecretKeySpec(secret.getBytes(), "AES");
+		Key key = new SecretKeySpec(SEGRETO.getBytes(), "AES");
 		try {
-			Cipher c = Cipher.getInstance(ALGORITHM);
+			Cipher c = Cipher.getInstance(ALGORITMO);
 			c.init(Cipher.DECRYPT_MODE, key);
 
 			return new String(c.doFinal(Base64.getDecoder().decode(dbCodice)));
